@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MMP Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="left-rail">
+        <div class="brand-block">
+          <div class="brand-mark">MMP</div>
+          <div>
+            <div class="eyebrow">Model Governance</div>
+            <h1>Control Room</h1>
+          </div>
+        </div>
+        <nav class="nav-stack">
+          <button class="nav-link is-active">Overview</button>
+          <button class="nav-link">Model Registry</button>
+          <button class="nav-link">Approval Workbench</button>
+          <button class="nav-link">Audit Trail</button>
+        </nav>
+        <section class="rail-card">
+          <p class="eyebrow">Role Simulation</p>
+          <div class="role-switcher">
+            <button class="role-button is-active" data-role="model_owner">Model Owner</button>
+            <button class="role-button" data-role="model_approver">Model Approver</button>
+            <button class="role-button" data-role="admin">Admin</button>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main-panel">
+        <header class="top-bar">
+          <div>
+            <div class="eyebrow">Premium Dark Enterprise Prototype</div>
+            <h2 id="page-title">Name Screening - SG</h2>
+          </div>
+          <div class="top-bar-meta">
+            <div class="pill" id="current-user-pill">Model Owner</div>
+            <div class="pill subtle">Baseline: latest 6 approved jobs</div>
+          </div>
+        </header>
+
+        <section class="hero-grid">
+          <article class="panel hero-card">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Model Summary</p>
+                <h3 id="model-name">Loading...</h3>
+              </div>
+              <div class="status-cluster">
+                <span class="badge success" id="model-status">active</span>
+                <span class="badge info" id="approval-status">verified</span>
+              </div>
+            </div>
+            <p id="model-description" class="lede"></p>
+            <div class="meta-grid">
+              <div>
+                <span class="meta-label">Project</span>
+                <strong id="project-name"></strong>
+              </div>
+              <div>
+                <span class="meta-label">Region</span>
+                <strong id="model-region"></strong>
+              </div>
+              <div>
+                <span class="meta-label">Owner</span>
+                <strong id="model-owner"></strong>
+              </div>
+              <div>
+                <span class="meta-label">Jobs</span>
+                <strong id="job-count"></strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel queue-card">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Approval Workbench</p>
+                <h3>Pending Queue</h3>
+              </div>
+              <span class="badge warning" id="queue-count">0 pending</span>
+            </div>
+            <div id="queue-list" class="queue-list"></div>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel jobs-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Job Registry</p>
+                <h3>Training Runs</h3>
+              </div>
+            </div>
+            <div id="jobs-table" class="table-shell"></div>
+          </article>
+
+          <article class="panel detail-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Training Dashboard</p>
+                <h3 id="job-title">Select a job</h3>
+              </div>
+              <div class="status-cluster">
+                <span class="badge" id="workflow-badge">state</span>
+                <span class="badge" id="drift-badge">drift</span>
+              </div>
+            </div>
+
+            <div id="job-summary" class="summary-band"></div>
+            <div id="action-banner" class="action-banner"></div>
+
+            <div class="split-grid">
+              <section class="subpanel">
+                <div class="subpanel-header">
+                  <h4>Performance Metrics</h4>
+                  <span class="pill subtle">sigma threshold &gt; 6</span>
+                </div>
+                <div id="metrics-table" class="metric-table"></div>
+              </section>
+
+              <section class="subpanel">
+                <div class="subpanel-header">
+                  <h4>Feature Importance and Drift</h4>
+                  <span class="pill subtle">sorted by SHAP importance</span>
+                </div>
+                <div id="features-table" class="feature-table"></div>
+              </section>
+            </div>
+
+            <section class="split-grid lower-grid">
+              <div class="subpanel">
+                <div class="subpanel-header">
+                  <h4>Decision Console</h4>
+                </div>
+                <form id="decision-form" class="decision-form">
+                  <label>
+                    Decision
+                    <select id="decision-select">
+                      <option value="approved">Approve</option>
+                      <option value="rejected">Reject</option>
+                    </select>
+                  </label>
+                  <label>
+                    Justification
+                    <textarea id="justification-input" rows="5" placeholder="Add a review rationale or business context."></textarea>
+                  </label>
+                  <button type="submit" class="primary-button">Submit Review</button>
+                  <p id="decision-hint" class="helper-text"></p>
+                </form>
+              </div>
+
+              <div class="subpanel">
+                <div class="subpanel-header">
+                  <h4>Audit Trail</h4>
+                </div>
+                <div id="audit-timeline" class="timeline"></div>
+              </div>
+            </section>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

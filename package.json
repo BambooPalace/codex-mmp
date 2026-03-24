@@ -1,0 +1,12 @@
+{
+  "name": "mmp-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Model Management Platform prototype implementing the initial architecture and UI design.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
