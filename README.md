@@ -58,3 +58,32 @@ The system enforces a "Four-Eyes" principle for any anomalous training results.
    * **Stage 2 (Model Approver):** Must perform a final review. The Job only reaches the `Approved` state if the Approver grants final consent.
 3. **Rejection:**
    * If either the Model Owner or Model Approver "Rejects" the Job, it is marked as `Rejected` and cannot be used in production.
+
+## Deploying To Vercel
+
+This repo is now set up so it can run locally with `npm start` and deploy to Vercel with the same application logic.
+
+### Local Run
+
+```bash
+npm start
+```
+
+The app will be available at `http://127.0.0.1:3000`.
+
+### Vercel Deploy
+
+1. Push this repository to GitHub.
+2. Log in to Vercel and click `Add New...` -> `Project`.
+3. Import the GitHub repository.
+4. For the project settings:
+   * Framework Preset: `Other`
+   * Build Command: leave empty
+   * Output Directory: leave empty
+5. Click `Deploy`.
+
+### Notes
+
+* Static files are served from `public/`.
+* API routes are handled by `api/[...path].js` on Vercel.
+* The app currently stores its data in memory, so Vercel deployments will reset to seed data on cold starts or redeploys.

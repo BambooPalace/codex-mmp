@@ -704,7 +704,7 @@ function bootstrapPendingEvaluation() {
 
 bootstrapPendingEvaluation();
 
-const server = http.createServer((req, res) => {
+function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
 
@@ -714,7 +714,9 @@ const server = http.createServer((req, res) => {
   }
 
   serveStatic(req, res, pathname);
-});
+}
+
+const server = http.createServer(handleRequest);
 
 if (require.main === module) {
   server.listen(PORT, HOST, () => {
@@ -723,6 +725,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  handleRequest,
   server,
   state,
   users,
