@@ -55,6 +55,14 @@ textarea {
   font: inherit;
 }
 
+button {
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    transform 140ms ease,
+    color 140ms ease;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -145,6 +153,14 @@ textarea {
   padding: 28px;
 }
 
+.page-section {
+  display: none;
+}
+
+.page-section.is-active {
+  display: block;
+}
+
 .top-bar,
 .panel-header,
 .subpanel-header,
@@ -228,10 +244,28 @@ textarea {
   border-radius: var(--radius-xl);
 }
 
+.page-panel {
+  min-height: calc(100vh - 150px);
+}
+
+.page-panel-header {
+  margin-bottom: 12px;
+}
+
+.page-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .lede {
   margin-top: 10px;
   color: var(--text-secondary);
   line-height: 1.55;
+}
+
+.lede.compact {
+  margin: 0;
 }
 
 .meta-grid {
@@ -274,7 +308,11 @@ textarea {
 }
 
 .queue-item:hover,
-.job-row:hover {
+.job-row:hover,
+.workbench-card:hover,
+.registry-card:hover,
+.nav-link:hover,
+.role-button:hover {
   border-color: rgba(91, 192, 235, 0.3);
 }
 
@@ -306,6 +344,48 @@ textarea {
 .job-row.selected {
   background: rgba(91, 192, 235, 0.08);
   border-color: rgba(91, 192, 235, 0.26);
+}
+
+.registry-list,
+.workbench-list {
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.registry-card,
+.workbench-card {
+  width: 100%;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid var(--border-subtle);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.mini-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.mini-meta-grid > div {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.workbench-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .summary-band {
@@ -416,6 +496,16 @@ textarea {
   cursor: pointer;
 }
 
+.primary-button:hover {
+  transform: translateY(-1px);
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
 .helper-text {
   margin: 0;
   color: var(--text-muted);
@@ -439,6 +529,10 @@ textarea {
   .split-grid {
     grid-template-columns: 1fr;
   }
+
+  .mini-meta-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 900px) {
@@ -458,6 +552,16 @@ textarea {
   .job-row,
   .metric-row,
   .feature-row {
+    grid-template-columns: 1fr;
+  }
+
+  .workbench-head,
+  .panel-header,
+  .top-bar {
+    flex-direction: column;
+  }
+
+  .mini-meta-grid {
     grid-template-columns: 1fr;
   }
 }

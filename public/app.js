@@ -1,7 +1,10 @@
 const appState = {
   role: "model_owner",
   bootstrap: null,
-  selectedJobId: null
+  selectedJobId: null,
+  currentPage: "overview",
+  mockModels: [],
+  mockAuditEvents: []
 };
 
 const els = {
@@ -29,8 +32,22 @@ const els = {
   decisionForm: document.getElementById("decision-form"),
   decisionSelect: document.getElementById("decision-select"),
   justificationInput: document.getElementById("justification-input"),
-  decisionHint: document.getElementById("decision-hint")
+  decisionHint: document.getElementById("decision-hint"),
+  registerModelButton: document.getElementById("register-model-button"),
+  registrySummary: document.getElementById("registry-summary"),
+  registryList: document.getElementById("registry-list"),
+  registryFeedback: document.getElementById("registry-feedback"),
+  workbenchSummary: document.getElementById("workbench-summary"),
+  workbenchList: document.getElementById("workbench-list"),
+  auditSummary: document.getElementById("audit-summary"),
+  auditFeed: document.getElementById("audit-feed")
 };
+
+document.querySelectorAll(".nav-link").forEach((button) => {
+  button.addEventListener("click", () => {
+    setCurrentPage(button.dataset.page);
+  });
+});
 
 document.querySelectorAll(".role-button").forEach((button) => {
   button.addEventListener("click", async () => {
@@ -39,6 +56,10 @@ document.querySelectorAll(".role-button").forEach((button) => {
     appState.role = button.dataset.role;
     await loadBootstrap();
   });
+});
+
+els.registerModelButton.addEventListener("click", () => {
+  registerMockModel();
 });
 
 els.decisionForm.addEventListener("submit", async (event) => {
@@ -96,6 +117,10 @@ async function loadBootstrap() {
   renderShell();
   renderQueue();
   renderJobsTable();
+  renderRegistry();
+  renderWorkbench();
+  renderAuditFeed();
+  updatePageState();
 
   const fallbackJobId =
     appState.selectedJobId ||
@@ -107,11 +132,34 @@ async function loadBootstrap() {
   }
 }
 
+function setCurrentPage(page) {
+  appState.currentPage = page;
+  updatePageState();
+}
+
+function updatePageState() {
+  document.querySelectorAll(".nav-link").forEach((item) => {
+    item.classList.toggle("is-active", item.dataset.page === appState.currentPage);
+  });
+
+  document.querySelectorAll("[data-page-panel]").forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.pagePanel === appState.currentPage);
+  });
+
+  const model = appState.bootstrap?.models?.[0];
+  const pageTitles = {
+    overview: model?.name || "Overview",
+    registry: "Model Registry",
+    workbench: "Approval Workbench",
+    audit: "Audit Trail"
+  };
+  els.pageTitle.textContent = pageTitles[appState.currentPage] || "MMP";
+}
+
 function renderShell() {
   const model = appState.bootstrap.models[0];
   els.currentUserPill.textContent = labelize(appState.bootstrap.currentUser.role);
   els.modelName.textContent = model.name;
-  els.pageTitle.textContent = model.name;
   els.modelDescription.textContent = model.description;
   els.projectName.textContent = appState.bootstrap.projects[0].name;
   els.modelRegion.textContent = model.region;
@@ -141,9 +189,7 @@ function renderQueue() {
     )
     .join("");
 
-  els.queueList.querySelectorAll("[data-job-id]").forEach((button) => {
-    button.addEventListener("click", () => selectJob(button.dataset.jobId));
-  });
+  bindJobButtons(els.queueList);
 }
 
 function renderJobsTable() {
@@ -163,9 +209,7 @@ function renderJobsTable() {
     )
     .join("");
 
-  els.jobsTable.querySelectorAll("[data-job-id]").forEach((button) => {
-    button.addEventListener("click", () => selectJob(button.dataset.jobId));
-  });
+  bindJobButtons(els.jobsTable);
 }
 
 async function selectJob(jobId) {
@@ -249,6 +293,7 @@ function renderJob(job, audit) {
 
   renderDecisionConsole(job);
   renderTimeline(audit, job.approvals);
+  renderAuditFeed(audit);
 }
 
 function renderDecisionConsole(job) {
@@ -297,6 +342,203 @@ function renderTimeline(audit, approvals) {
   els.auditTimeline.innerHTML = `${chain.join("")}${forensic}`;
 }
 
+function renderRegistry() {
+  const models = getRegistryModels();
+  const approvedCount = models.filter((model) => model.managementApprovalStatus === "verified").length;
+  const pendingCount = models.filter((model) => model.managementApprovalStatus !== "verified").length;
+  const activeCount = models.filter((model) => model.lifecycleStatus === "active").length;
+
+  els.registrySummary.innerHTML = [
+    summaryCard("Models", String(models.length)),
+    summaryCard("Active", String(activeCount)),
+    summaryCard("Verified Approval", String(approvedCount)),
+    summaryCard("Pending Evidence", String(pendingCount))
+  ].join("");
+
+  els.registryList.innerHTML = models
+    .map(
+      (model) => `
+        <article class="registry-card">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">${model.projectName}</p>
+              <h4>${model.name}</h4>
+            </div>
+            <div class="status-cluster">
+              <span class="badge ${statusTone(model.lifecycleStatus)}">${model.lifecycleStatus}</span>
+              <span class="badge ${statusTone(model.managementApprovalStatus)}">${model.managementApprovalStatus}</span>
+            </div>
+          </div>
+          <p class="lede compact">${model.description}</p>
+          <div class="mini-meta-grid">
+            <div><span class="meta-label">Code</span><strong class="mono">${model.modelCode}</strong></div>
+            <div><span class="meta-label">Region</span><strong>${model.region}</strong></div>
+            <div><span class="meta-label">Owner</span><strong>${model.ownerName}</strong></div>
+            <div><span class="meta-label">Last Job</span><strong>${model.latestJobLabel}</strong></div>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderWorkbench() {
+  const queue = appState.bootstrap.pendingQueue;
+  const ownerActions = queue.filter((job) => job.workflowState === "pending_owner_review").length;
+  const approverActions = queue.filter((job) => job.workflowState === "pending_approver_review").length;
+
+  els.workbenchSummary.innerHTML = [
+    summaryCard("Pending Reviews", String(queue.length)),
+    summaryCard("Owner Queue", String(ownerActions)),
+    summaryCard("Approver Queue", String(approverActions)),
+    summaryCard("Current Role", labelize(appState.role))
+  ].join("");
+
+  if (!queue.length) {
+    els.workbenchList.innerHTML = `<div class="queue-item"><strong>Queue cleared</strong><span class="small">No anomalous jobs are waiting for action.</span></div>`;
+    return;
+  }
+
+  els.workbenchList.innerHTML = queue
+    .map(
+      (job) => `
+        <button class="workbench-card" data-job-id="${job.jobId}">
+          <div class="workbench-head">
+            <div>
+              <strong>Run ${job.jobRunNumber}</strong>
+              <div class="small">${formatDate(job.submittedAt)}</div>
+            </div>
+            <span class="badge ${statusTone(job.workflowState)}">${labelize(job.workflowState)}</span>
+          </div>
+          <p class="lede compact">Drift severity is <strong>${job.driftSeverity}</strong>. Open the run dashboard from here to complete review and capture justification.</p>
+          <div class="mini-meta-grid">
+            <div><span class="meta-label">Dataset</span><strong class="mono">${job.trainingDatasetReference}</strong></div>
+            <div><span class="meta-label">Action</span><strong>${job.workflowState === "pending_owner_review" ? "Owner narrative required" : "Final approver decision required"}</strong></div>
+          </div>
+        </button>
+      `
+    )
+    .join("");
+
+  bindJobButtons(els.workbenchList, () => {
+    setCurrentPage("overview");
+  });
+}
+
+function renderAuditFeed(selectedAudit = null) {
+  const events = getAuditFeedEvents(selectedAudit);
+
+  els.auditSummary.innerHTML = [
+    summaryCard("Events", String(events.length)),
+    summaryCard("Model Actions", String(events.filter((event) => event.entityType === "model").length)),
+    summaryCard("Job Actions", String(events.filter((event) => event.entityType === "job").length)),
+    summaryCard("Selected Run", appState.selectedJobId || "none")
+  ].join("");
+
+  els.auditFeed.innerHTML = events
+    .map(
+      (event) => `
+        <div class="timeline-item">
+          <strong>${labelize(event.eventType)}</strong>
+          <div class="small">${event.actorName} • ${labelize(event.actorRole)} • ${formatDate(event.occurredAt)}</div>
+          <p>${event.description}</p>
+        </div>
+      `
+    )
+    .join("");
+}
+
+function registerMockModel() {
+  const nextIndex = appState.mockModels.length + 2;
+  const model = {
+    modelId: `mdl_mock_${nextIndex}`,
+    projectName: appState.bootstrap.projects[0].name,
+    modelCode: `NAME_SCREENING_ASEAN_${nextIndex}`,
+    name: `Name Screening - ASEAN ${nextIndex}`,
+    region: ["MY", "TH", "ID", "VN"][appState.mockModels.length % 4],
+    ownerName: appState.bootstrap.currentUser.name,
+    lifecycleStatus: "pending_activation",
+    managementApprovalStatus: "uploaded",
+    description: "Mock registration created from the registry page to simulate onboarding before final document verification.",
+    latestJobLabel: "No runs yet"
+  };
+
+  appState.mockModels.unshift(model);
+  appState.mockAuditEvents.unshift({
+    entityType: "model",
+    eventType: "model_registered",
+    actorName: appState.bootstrap.currentUser.name,
+    actorRole: appState.bootstrap.currentUser.role,
+    occurredAt: new Date().toISOString(),
+    description: `${model.name} was added to the registry with management approval evidence uploaded for verification.`
+  });
+
+  els.registryFeedback.textContent = `${model.name} registered as mock content.`;
+  renderRegistry();
+  renderAuditFeed();
+}
+
+function getRegistryModels() {
+  const seededModels = appState.bootstrap.models.map((model) => ({
+    modelId: model.modelId,
+    projectName: appState.bootstrap.projects.find((project) => project.projectId === model.projectId)?.name || "Unknown Project",
+    modelCode: model.modelCode,
+    name: model.name,
+    region: model.region,
+    ownerName: model.owner.name,
+    lifecycleStatus: model.lifecycleStatus,
+    managementApprovalStatus: model.managementApprovalStatus,
+    description: model.description,
+    latestJobLabel: getLatestJobLabel(model.modelId)
+  }));
+
+  return [...appState.mockModels, ...seededModels];
+}
+
+function getLatestJobLabel(modelId) {
+  const job = appState.bootstrap.jobs.find((item) => item.modelId === modelId);
+  return job ? `Run ${job.jobRunNumber} • ${labelize(job.workflowState)}` : "No runs yet";
+}
+
+function getAuditFeedEvents(selectedAudit = null) {
+  const seeded = (selectedAudit || [])
+    .map((event) => ({
+      entityType: event.entityType,
+      eventType: event.eventType,
+      actorName: event.actor.name,
+      actorRole: event.actor.role,
+      occurredAt: event.occurredAt,
+      description: event.metadata?.justificationText || "Workflow state updated and recorded in the governance log."
+    }))
+    .concat(
+      appState.bootstrap.jobs.slice(0, 3).map((job) => ({
+        entityType: "job",
+        eventType: job.driftDetected ? "drift_review_required" : "job_auto_approved",
+        actorName: job.autoApproved ? "System" : "Daryl Lim",
+        actorRole: job.autoApproved ? "system" : "model_owner",
+        occurredAt: job.finalDecisionAt || job.submittedAt,
+        description: job.driftDetected
+          ? `Run ${job.jobRunNumber} was routed into manual review after 6 sigma drift evaluation.`
+          : `Run ${job.jobRunNumber} cleared system evaluation and was auto-approved.`
+      }))
+    );
+
+  return [...appState.mockAuditEvents, ...seeded]
+    .sort((left, right) => new Date(right.occurredAt) - new Date(left.occurredAt))
+    .slice(0, 12);
+}
+
+function bindJobButtons(container, onClick) {
+  container.querySelectorAll("[data-job-id]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (typeof onClick === "function") {
+        onClick();
+      }
+      await selectJob(button.dataset.jobId);
+    });
+  });
+}
+
 function timelineBlock(title, status, text) {
   return `
     <div class="timeline-item">
@@ -333,7 +575,7 @@ function labelize(value) {
 
 function statusTone(value) {
   if (["approved_auto", "approved_final", "verified", "active", "none"].includes(value)) return "success";
-  if (["pending_owner_review", "pending_approver_review", "high", "medium", "warning"].includes(value)) return "warning";
+  if (["pending_owner_review", "pending_approver_review", "high", "medium", "warning", "pending_activation", "uploaded"].includes(value)) return "warning";
   if (["critical", "rejected", "danger"].includes(value)) return "danger";
   return "info";
 }

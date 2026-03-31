@@ -23,10 +23,10 @@
           </div>
         </div>
         <nav class="nav-stack">
-          <button class="nav-link is-active">Overview</button>
-          <button class="nav-link">Model Registry</button>
-          <button class="nav-link">Approval Workbench</button>
-          <button class="nav-link">Audit Trail</button>
+          <button class="nav-link is-active" data-page="overview">Overview</button>
+          <button class="nav-link" data-page="registry">Model Registry</button>
+          <button class="nav-link" data-page="workbench">Approval Workbench</button>
+          <button class="nav-link" data-page="audit">Audit Trail</button>
         </nav>
         <section class="rail-card">
           <p class="eyebrow">Role Simulation</p>
@@ -50,124 +50,172 @@
           </div>
         </header>
 
-        <section class="hero-grid">
-          <article class="panel hero-card">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Model Summary</p>
-                <h3 id="model-name">Loading...</h3>
+        <section class="page-section is-active" data-page-panel="overview">
+          <section class="hero-grid">
+            <article class="panel hero-card">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Model Summary</p>
+                  <h3 id="model-name">Loading...</h3>
+                </div>
+                <div class="status-cluster">
+                  <span class="badge success" id="model-status">active</span>
+                  <span class="badge info" id="approval-status">verified</span>
+                </div>
               </div>
-              <div class="status-cluster">
-                <span class="badge success" id="model-status">active</span>
-                <span class="badge info" id="approval-status">verified</span>
+              <p id="model-description" class="lede"></p>
+              <div class="meta-grid">
+                <div>
+                  <span class="meta-label">Project</span>
+                  <strong id="project-name"></strong>
+                </div>
+                <div>
+                  <span class="meta-label">Region</span>
+                  <strong id="model-region"></strong>
+                </div>
+                <div>
+                  <span class="meta-label">Owner</span>
+                  <strong id="model-owner"></strong>
+                </div>
+                <div>
+                  <span class="meta-label">Jobs</span>
+                  <strong id="job-count"></strong>
+                </div>
               </div>
-            </div>
-            <p id="model-description" class="lede"></p>
-            <div class="meta-grid">
-              <div>
-                <span class="meta-label">Project</span>
-                <strong id="project-name"></strong>
-              </div>
-              <div>
-                <span class="meta-label">Region</span>
-                <strong id="model-region"></strong>
-              </div>
-              <div>
-                <span class="meta-label">Owner</span>
-                <strong id="model-owner"></strong>
-              </div>
-              <div>
-                <span class="meta-label">Jobs</span>
-                <strong id="job-count"></strong>
-              </div>
-            </div>
-          </article>
+            </article>
 
-          <article class="panel queue-card">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Approval Workbench</p>
-                <h3>Pending Queue</h3>
+            <article class="panel queue-card">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Approval Workbench</p>
+                  <h3>Pending Queue</h3>
+                </div>
+                <span class="badge warning" id="queue-count">0 pending</span>
               </div>
-              <span class="badge warning" id="queue-count">0 pending</span>
+              <div id="queue-list" class="queue-list"></div>
+            </article>
+          </section>
+
+          <section class="content-grid">
+            <article class="panel jobs-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Job Registry</p>
+                  <h3>Training Runs</h3>
+                </div>
+              </div>
+              <div id="jobs-table" class="table-shell"></div>
+            </article>
+
+            <article class="panel detail-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Training Dashboard</p>
+                  <h3 id="job-title">Select a job</h3>
+                </div>
+                <div class="status-cluster">
+                  <span class="badge" id="workflow-badge">state</span>
+                  <span class="badge" id="drift-badge">drift</span>
+                </div>
+              </div>
+
+              <div id="job-summary" class="summary-band"></div>
+              <div id="action-banner" class="action-banner"></div>
+
+              <div class="split-grid">
+                <section class="subpanel">
+                  <div class="subpanel-header">
+                    <h4>Performance Metrics</h4>
+                    <span class="pill subtle">sigma threshold &gt; 6</span>
+                  </div>
+                  <div id="metrics-table" class="metric-table"></div>
+                </section>
+
+                <section class="subpanel">
+                  <div class="subpanel-header">
+                    <h4>Feature Importance and Drift</h4>
+                    <span class="pill subtle">sorted by SHAP importance</span>
+                  </div>
+                  <div id="features-table" class="feature-table"></div>
+                </section>
+              </div>
+
+              <section class="split-grid lower-grid">
+                <div class="subpanel">
+                  <div class="subpanel-header">
+                    <h4>Decision Console</h4>
+                  </div>
+                  <form id="decision-form" class="decision-form">
+                    <label>
+                      Decision
+                      <select id="decision-select">
+                        <option value="approved">Approve</option>
+                        <option value="rejected">Reject</option>
+                      </select>
+                    </label>
+                    <label>
+                      Justification
+                      <textarea id="justification-input" rows="5" placeholder="Add a review rationale or business context."></textarea>
+                    </label>
+                    <button type="submit" class="primary-button">Submit Review</button>
+                    <p id="decision-hint" class="helper-text"></p>
+                  </form>
+                </div>
+
+                <div class="subpanel">
+                  <div class="subpanel-header">
+                    <h4>Audit Trail</h4>
+                  </div>
+                  <div id="audit-timeline" class="timeline"></div>
+                </div>
+              </section>
+            </article>
+          </section>
+        </section>
+
+        <section class="page-section" data-page-panel="registry">
+          <article class="panel page-panel">
+            <div class="panel-header page-panel-header">
+              <div>
+                <p class="eyebrow">Model Registry</p>
+                <h3>Registered Models</h3>
+              </div>
+              <div class="page-actions">
+                <button id="register-model-button" class="primary-button" type="button">Register Model</button>
+              </div>
             </div>
-            <div id="queue-list" class="queue-list"></div>
+            <p class="lede">Track lifecycle status, management approval readiness, and the latest governance posture for each model instance.</p>
+            <div id="registry-summary" class="summary-band"></div>
+            <div id="registry-list" class="registry-list"></div>
+            <p id="registry-feedback" class="helper-text"></p>
           </article>
         </section>
 
-        <section class="content-grid">
-          <article class="panel jobs-panel">
-            <div class="panel-header">
+        <section class="page-section" data-page-panel="workbench">
+          <article class="panel page-panel">
+            <div class="panel-header page-panel-header">
               <div>
-                <p class="eyebrow">Job Registry</p>
-                <h3>Training Runs</h3>
+                <p class="eyebrow">Approval Workbench</p>
+                <h3>Review Queue</h3>
               </div>
             </div>
-            <div id="jobs-table" class="table-shell"></div>
+            <p class="lede">A throughput view for model owners and approvers to triage drifted jobs, confirm evidence, and complete the four-eyes workflow.</p>
+            <div id="workbench-summary" class="summary-band"></div>
+            <div id="workbench-list" class="workbench-list"></div>
           </article>
+        </section>
 
-          <article class="panel detail-panel">
-            <div class="panel-header">
+        <section class="page-section" data-page-panel="audit">
+          <article class="panel page-panel">
+            <div class="panel-header page-panel-header">
               <div>
-                <p class="eyebrow">Training Dashboard</p>
-                <h3 id="job-title">Select a job</h3>
-              </div>
-              <div class="status-cluster">
-                <span class="badge" id="workflow-badge">state</span>
-                <span class="badge" id="drift-badge">drift</span>
+                <p class="eyebrow">Audit Trail</p>
+                <h3>Governance Timeline</h3>
               </div>
             </div>
-
-            <div id="job-summary" class="summary-band"></div>
-            <div id="action-banner" class="action-banner"></div>
-
-            <div class="split-grid">
-              <section class="subpanel">
-                <div class="subpanel-header">
-                  <h4>Performance Metrics</h4>
-                  <span class="pill subtle">sigma threshold &gt; 6</span>
-                </div>
-                <div id="metrics-table" class="metric-table"></div>
-              </section>
-
-              <section class="subpanel">
-                <div class="subpanel-header">
-                  <h4>Feature Importance and Drift</h4>
-                  <span class="pill subtle">sorted by SHAP importance</span>
-                </div>
-                <div id="features-table" class="feature-table"></div>
-              </section>
-            </div>
-
-            <section class="split-grid lower-grid">
-              <div class="subpanel">
-                <div class="subpanel-header">
-                  <h4>Decision Console</h4>
-                </div>
-                <form id="decision-form" class="decision-form">
-                  <label>
-                    Decision
-                    <select id="decision-select">
-                      <option value="approved">Approve</option>
-                      <option value="rejected">Reject</option>
-                    </select>
-                  </label>
-                  <label>
-                    Justification
-                    <textarea id="justification-input" rows="5" placeholder="Add a review rationale or business context."></textarea>
-                  </label>
-                  <button type="submit" class="primary-button">Submit Review</button>
-                  <p id="decision-hint" class="helper-text"></p>
-                </form>
-              </div>
-
-              <div class="subpanel">
-                <div class="subpanel-header">
-                  <h4>Audit Trail</h4>
-                </div>
-                <div id="audit-timeline" class="timeline"></div>
-              </div>
-            </section>
+            <p class="lede">Immutable activity across registration, training, drift review, and final approval. This mock timeline combines seeded events with client-side registry actions.</p>
+            <div id="audit-summary" class="summary-band"></div>
+            <div id="audit-feed" class="timeline"></div>
           </article>
         </section>
       </main>
